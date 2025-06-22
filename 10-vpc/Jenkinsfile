@@ -5,28 +5,30 @@ pipeline {
     options {
         timeout(time: 30, unit: 'MINUTES') //timeout
         disableConcurrentBuilds()  //disable concurent build one after one
+        ansiColor('xterm')
     }
     parameters {
        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'select action')
     }
 
     stages{
-        stage('Init'){
+        stage('validate'){
             steps {
                 sh """
                   cd 10-vp
-                  terraform init --reconfigre
+                  terraform validate
                 """
             }
         }
 
-        stage('Plan'){
+        stage('Init and Plan'){
           steps {
              withAWS(region: 'us-east-1', credentials: 'aws-creds')
-             sh """
-                cd 10-vpc
-                terraform plan -out=tfplan
-             """
+                sh """
+                    cd 10-vpc
+                    terraform init --reconfigure
+                    terraform plan -out=tfplan
+                 """
           }
         }
     }
