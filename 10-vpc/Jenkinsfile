@@ -23,13 +23,25 @@ pipeline {
              }
           }
         }
-        stage('validate'){
-            steps {
+        stage('Apply and Destroy'){
+          input {
+            message "Should we continue?"
+            ok "Yes, we should."
+          }
+          steps {
+             withAWS(region: 'us-east-1', credentials: 'aws-creds') {
                 sh """
-                  cd 10-vpc
-                  terraform validate
-                """
-            }
+                    cd 10-vpc
+                    if [ ${params.ACTION} == 'apply' ]
+                    then 
+                      terraform apply --auto-approve tfplan
+                    elif [ ${params.ACTION} == 'destroy' ]
+                    then 
+                     terraform destroy --auto-approve tfplan
+                    fi
+                 """
+             }
+          }
         }
     }
 
