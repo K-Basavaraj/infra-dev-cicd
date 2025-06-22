@@ -25,7 +25,7 @@ pipeline {
         }
         stage('Apply and Destroy'){
           input {
-            message "Should we continue?"
+            message "Should we continue to ${params.ACTION}"
             ok "Yes, we should."
           }
           steps {
@@ -37,7 +37,7 @@ pipeline {
                       terraform apply --auto-approve tfplan
                     elif [ ${params.ACTION} == 'destroy' ]
                     then 
-                     terraform destroy --auto-approve tfplan
+                     terraform destroy --auto-approve 
                     fi
                  """
              }
