@@ -15,7 +15,7 @@ pipeline {
         stage('validate'){
             steps {
                 sh """
-                  cd 10-vp
+                  cd 10-vpc
                   terraform validate
                 """
             }
