@@ -20,7 +20,7 @@ pipeline {
 
         stage('Plan'){
           steps {
-             withAWS(region: 'us-east-1', credentails: 'aws-creds')
+             withAWS(region: 'us-east-1', credentials: 'aws-creds')
              sh 'cd 10-vpc'
              sh 'terraform plan -out=tfplan'
           }
