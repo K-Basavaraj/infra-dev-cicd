@@ -12,15 +12,6 @@ pipeline {
     }
 
     stages{
-        stage('validate'){
-            steps {
-                sh """
-                  cd 10-vpc
-                  terraform validate
-                """
-            }
-        }
-
         stage('Init and Plan'){
           steps {
              withAWS(region: 'us-east-1', credentials: 'aws-creds')
@@ -30,6 +21,14 @@ pipeline {
                     terraform plan -out=tfplan
                  """
           }
+        }
+        stage('validate'){
+            steps {
+                sh """
+                  cd 10-vpc
+                  terraform validate
+                """
+            }
         }
     }
 
