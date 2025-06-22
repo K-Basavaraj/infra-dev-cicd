@@ -1,0 +1,42 @@
+pipeline {
+    agent {
+        label 'AGENT-1'
+    }
+    options {
+        timeout(time: 30, unit: 'MINUTES') //timeout
+        disableConcurrentBuilds()  //disable concurent build one after one
+    }
+    parameters {
+       choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'select action')
+    }
+
+    stages{
+        stage('Init'){
+            steps {
+                sh 'cd 10-vpc'
+                sh 'terraform init --reconfigre'
+            }
+        }
+
+        stage('Plan'){
+          steps {
+             withAWS(region: 'us-east-1', credentails: 'aws-creds')
+             sh 'cd 10-vpc'
+             sh 'terraform plan -out=tfplan'
+          }
+        }
+    }
+
+     post {
+        always {
+            echo 'This section always runs!'
+            deleteDir() //in jenkins this function will delete the workspace directory of the job on the agent (VM/container)
+        }
+        success {
+            echo 'This section runs when pipeline sucess'
+        }
+        failure {
+            echo 'This section runs when pipeline failed' 
+        }
+    }
+}
