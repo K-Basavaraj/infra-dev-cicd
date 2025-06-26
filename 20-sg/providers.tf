@@ -6,10 +6,10 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = "remotestate-s301"
-    key            = "expense-sg"
+    bucket         = "remotestate-s301-dev"
+    key            = "expense-sg-dev"
     region         = "us-east-1"
-    dynamodb_table = "expense-infradb-dev"
+    dynamodb_table = "expense-locking-dev"
   }
 }
 
