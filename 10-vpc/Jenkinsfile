@@ -45,7 +45,7 @@ pipeline {
         }
         stage("Trigger SG"){
             steps {
-            build job: '20-sg', parameters: [[$class: 'string', name: 'ACTION', value: 'apply']]
+            build job: '20-sg', parameters: [string(name: 'ACTION', value: "apply")], wait: false
             }
         }
     }
