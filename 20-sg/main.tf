@@ -362,7 +362,7 @@ resource "aws_security_group_rule" "bastion_public" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]  #Allow from ANY IP (not secure for production!) here we need to give officeips
+  cidr_blocks       = ["0.0.0.0/0"]        #Allow from ANY IP (not secure for production!) here we need to give officeips
   security_group_id = module.bastion_sg.id #where your creating this rule
 }
 
@@ -372,8 +372,28 @@ resource "aws_security_group_rule" "ansible_public" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"] #Allow from ANY IP (not secure for production!) here we need to give officeips
+  cidr_blocks       = ["0.0.0.0/0"]        #Allow from ANY IP (not secure for production!) here we need to give officeips
   security_group_id = module.ansible_sg.id #where your creating this rule
+}
+
+
+module "ingress_alb_sg" {
+  source       = "git::https://github.com/K-Basavaraj/terraform-aws-secuirty-group.git?ref=main"
+  project_name = var.project_name
+  environment  = var.environment
+  sg_name      = "ingress-alb"
+  vpc_id       = local.vpc_id
+  common_tags  = var.common_tags
+  sg_tags      = var.ing_alb_sg_tags
+}
+
+resource "aws_security_group_rule" "ingress_alb_https" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = module.ingress_alb_sg.id
 }
 
 #######################################################################################################
