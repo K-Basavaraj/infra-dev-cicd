@@ -35,13 +35,31 @@ pipeline {
                     if [ ${params.ACTION} == 'apply' ]
                     then 
                       terraform apply --auto-approve tfplan
-                    elif [ ${params.ACTION} == 'destroy' ]
-                    then 
-                     terraform destroy --auto-approve 
                     fi
                  """
              }
           }
+        }
+        stage('Destroy'){
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps{
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+                    script {
+                        def directories = ['80-alb', '70-ecr', '60-acm', '50-eks', '30-bastion', '20-sg', '10-vpc']
+                        for (dir in directories) {
+                            echo "Destroying resources in directory: ${dir}"
+                            sh """
+                            cd ${dir}
+                            terraform init -reconfigure
+                            terraform destroy -auto-approve || { echo "Failed to destroy resources in ${dir}"; exit 1; }
+                            cd ..
+                            """
+                        }
+                    }
+                }
+            }
         }
     }
 
