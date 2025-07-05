@@ -1,0 +1,117 @@
+pipeline {
+    agent {
+        label 'AGENT-1'
+    }
+    options {
+        timeout(time: 30, unit: 'MINUTES') //timeout
+        disableConcurrentBuilds()  //disable concurent build one after one
+        ansiColor('xterm')
+    }
+    parameters {
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'select action')
+    }
+
+    stages {
+        stage('Init and Plan') {
+            steps {
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+                    sh '''
+                    cd 90-cdn
+                    terraform init -reconfigure
+                    terraform plan -out=tfplan
+                 '''
+                }
+            }
+        }
+        stage('Apply and Destroy') {
+         /* input {
+            message "Should we continue to ${params.ACTION}"
+            ok "Yes, we should."
+          } */
+            steps {
+              withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+               sh """
+                   cd 90-cdn
+                   if [ ${params.ACTION} == 'apply' ]
+                   then
+                     terraform apply --auto-approve tfplan
+                   elif [ ${params.ACTION} == 'destroy' ]
+                   then
+                    terraform destroy --auto-approve
+                   fi
+                 """
+               }
+            }
+        }
+        stage('Parallel in seqntial') {
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            parallel {
+               stage('Ecr') {
+                   steps {
+                     build job: '70-ecr', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                  }
+                }
+                stage('Alb') {
+                    steps {
+                      build job: '80-alb', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+                stage('Acm') {
+                    steps {
+                      build job: '60-cdn', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+                stage('Eks') {
+                    steps {
+                      build job: '50-eks', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+                stage('Bastion') {
+                    steps {
+                      build job: '30-bastion', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
+                    }
+                }
+            }
+        }
+        // Define the list of destroy jobs in the required order.
+        // Order matters: '20-sg' (Security Group) should be destroyed first, then '10-vpc' (VPC).
+        // This avoids orphaned SGs that reference a deleted VPC.
+        def destroyJobs = ['20-sg', '10-vpc']
+
+        stage('Final Destroy Steps') {
+        // This stage runs only if the selected ACTION is 'destroy'
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    // Loop through each job in the destroyJobs list
+                    for (jobName in destroyJobs) {
+                    // Trigger the downstream destroy job
+                    // - wait: true => wait for the job to complete
+                    // - propagate: true => if the job fails, stop the pipeline and do NOT proceed to next destroy job
+                    // This ensures that VPC is destroyed only if SG was destroyed successfully
+                        build job: jobName, parameters: [string(name: 'ACTION', value: 'destroy')],
+                            wait: true,
+                            propagate: true
+                    }
+                }
+            }
+        }
+
+
+    post {
+        always {
+            echo 'This section always runs!'
+            deleteDir() //in jenkins this function will delete the workspace directory of the job on the agent (VM/container)
+        }
+        success {
+            echo 'This section runs when pipeline sucess'
+        }
+        failure {
+            echo 'This section runs when pipeline failed'
+        }
+    }
+}
