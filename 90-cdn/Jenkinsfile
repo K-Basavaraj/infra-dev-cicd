@@ -43,6 +43,28 @@ pipeline {
                }
             }
         }
+        stage('Destroy'){
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps{
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+                    script {
+                        def directories = ['90-cdn', '80-alb', '70-ecr', '60-acm', '50-eks', '30-bastion', '20-sg', '10-vpc']
+                        for (dir in directories) {
+                            echo "Destroying resources in directory: ${dir}"
+                            sh """
+                            cd ${dir}
+                            terraform init -reconfigure
+                            terraform destroy -auto-approve || { echo "Failed to destroy resources in ${dir}"; exit 1; }
+                            cd ..
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        /*
         stage('Parallel in seqntial') {
             when {
                 expression { params.ACTION == 'destroy' }
@@ -99,7 +121,7 @@ pipeline {
                     }
                 }
             }
-        }
+        } */
     }
     post {
         always {
