@@ -388,7 +388,7 @@ module "ingress_alb_sg" {
 }
 
 module "node_sg" {
-  source       = "git::https://github.com/K-Basavaraj/terraform-aws-secuirty-group.git?ref=mai"
+  source       = "git::https://github.com/K-Basavaraj/terraform-aws-secuirty-group.git?ref=main"
   project_name = var.project_name
   environment  = var.environment
   sg_name      = "node"
@@ -398,7 +398,7 @@ module "node_sg" {
 }
 
 module "eks_control_plane_sg" {
-  source       = "git::https://github.com/K-Basavaraj/terraform-aws-secuirty-group.git?ref=mai"
+  source       = "git::https://github.com/K-Basavaraj/terraform-aws-secuirty-group.git?ref=main"
   project_name = var.project_name
   environment  = var.environment
   sg_name      = "eks-control-plane"
