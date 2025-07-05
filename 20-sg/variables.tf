@@ -63,3 +63,16 @@ variable "ing_alb_sg_tags" {
     Component = "ing-alb"
   }
 }
+
+
+variable "node_sg_tagss" {
+   default = {
+    Component = "node-sg"
+  }
+}
+
+variable "eks_cp_sg_tags" {
+   default = {
+    Component = "eks-cp-sg"
+  }
+}
