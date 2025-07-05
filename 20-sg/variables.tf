@@ -65,7 +65,7 @@ variable "ing_alb_sg_tags" {
 }
 
 
-variable "node_sg_tagss" {
+variable "node_sg_tags" {
    default = {
     Component = "node-sg"
   }
