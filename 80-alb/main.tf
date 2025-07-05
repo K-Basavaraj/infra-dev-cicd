@@ -4,7 +4,7 @@ module "ingres_alb" {
   name                  = "${local.resource_name}-ingress-alb"
   vpc_id                = local.vpc_id
   subnets               = local.public_subnet_ids
-  security_groups       = [data.aws_ssm_parameter.ingress_alb_sg.value]
+  security_groups       = [data.aws_ssm_parameter.ingress_alb_sg_id.value]
   create_security_group = false
   tags = merge(
     var.common_tags,
