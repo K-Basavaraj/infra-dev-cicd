@@ -45,3 +45,10 @@ resource "aws_ssm_parameter" "web_alb_sg_id" {
   type  = "String"
   value = module.web_alb_sg.id
 }
+
+resource "aws_ssm_parameter" "ingress_alb_sg_id" {
+  # /expense/dev/mysql_sg_id
+  name  = "/${var.project_name}/${var.environment}/ingress_alb_sg_id"
+  type  = "String"
+  value = module.ingress_alb_sg.id
+}
