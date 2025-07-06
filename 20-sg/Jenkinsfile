@@ -23,6 +23,7 @@ pipeline {
           }
         }
       }
+
       stage('Apply and Destroy') {
         // input {
         //   message "Should we continue to ${params.ACTION}"
@@ -43,6 +44,7 @@ pipeline {
           }
         }
       }
+
       stage('Destroy vpc') {
         when {
         expression { params.ACTION == 'destroy' }
@@ -51,6 +53,7 @@ pipeline {
           build job: '10-vpc', parameters: [string(name: 'ACTION', value: 'destroy')], wait: false
         }
       }
+
       // Run this stage only if ACTION parameter is set to 'apply'
       stage('Run Parallel-1 Jobs') {
         when {
@@ -64,7 +67,7 @@ pipeline {
            def jobs = [
              "Bastion" : "30-bastion",
              "EKS"     : "50-eks",
-             "ACM"     : "60-acm", 
+             "RDS"     : "40-rds"
              "ECR"     : "70-ecr"
             ]
            // Convert the jobs map into another map where:
@@ -83,11 +86,17 @@ pipeline {
          }
         }
       }
-      stage('Parallel-2') {
+
+      stage('seqential') {
         when {
             expression { params.ACTION == 'apply' }
         }
-        parallel {
+        stages {
+          stage('ACM') {
+           steps {
+             build job: '60-acm', parameters: [string(name: 'ACTION', value: 'apply')]
+           }
+          }
           stage('ALB') {
            steps {
              build job: '80-alb', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
@@ -98,9 +107,9 @@ pipeline {
               build job: '90-cdn', parameters: [string(name: 'ACTION', value: 'apply')], wait: false
             }
           }
-        }
       }
     }
+  }
 
   post {
     always {
