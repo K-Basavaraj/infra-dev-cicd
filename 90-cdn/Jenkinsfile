@@ -47,7 +47,7 @@ pipeline {
             steps{
                 withAWS(region: 'us-east-1', credentials: 'aws-creds') {
                     script {
-                        def directories = ['90-cdn', '80-alb', '70-ecr', '60-acm', '50-eks', '30-bastion', '20-sg', '10-vpc']
+                        def directories = ['90-cdn', '80-alb', '70-ecr', '60-acm', '50-eks', '40-rds', '30-bastion', '20-sg', '10-vpc']
                         for (dir in directories) {
                             echo "Destroying resources in directory: ${dir}"
                             sh """
